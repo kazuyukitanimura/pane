@@ -12,6 +12,7 @@ WebKitWindow::WebKitWindow() {
     char **argv = NULL;
 
     app_ = new QApplication(argc, argv);
+    app_->processEvents();
     app_->setOrganizationName("Fractal");
     app_->setApplicationName("Pane");
     window_ = new QMainWindow(0);
@@ -89,7 +90,7 @@ Handle<Value> WebKitWindow::New (const Arguments &args)
 
     WebKitWindow *window = new WebKitWindow();
     window->Wrap(args.This());
-    window->app_->processEvents();
+    //window->app_->processEvents();
     return scope.Close(args.This());
 }
 
