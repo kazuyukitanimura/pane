@@ -8,9 +8,7 @@
    "main":"./index.js",
    "tags":["desktop","ui","webkit","native","qt","binding","cross-platform"],
 
-   "dependencies":{
-      "coffee-script":"*"
-   },
+   "dependencies":{},
 
    "devDependencies":{
       "node-log":"*",
