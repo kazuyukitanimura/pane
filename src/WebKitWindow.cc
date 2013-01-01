@@ -49,33 +49,17 @@ void WebKitWindow::Initialize(Handle<Object> target)
     s_ct->SetClassName(NODE_SYMBOL("WebKitWindow"));
 
     NODE_SET_PROTOTYPE_METHOD(s_ct, "processEvents", ProcessEvents);
-    NODE_SET_PROTOTYPE_METHOD(s_ct, "close", Close);
-    NODE_SET_PROTOTYPE_METHOD(s_ct, "open", Open);
 
-    NODE_SET_PROTOTYPE_METHOD(s_ct, "reload", Reload);
-    NODE_SET_PROTOTYPE_METHOD(s_ct, "move", Move);
     NODE_SET_PROTOTYPE_METHOD(s_ct, "screenshot", Screenshot);
 
-    NODE_SET_PROTOTYPE_METHOD(s_ct, "setMaximized", SetMaximized);
-    NODE_SET_PROTOTYPE_METHOD(s_ct, "setMinimized", SetMinimized);
-    NODE_SET_PROTOTYPE_METHOD(s_ct, "setFullscreen", SetFullscreen);
-
     NODE_SET_PROTOTYPE_METHOD(s_ct, "setUrl", SetUrl);
-    NODE_SET_PROTOTYPE_METHOD(s_ct, "getUrl", GetUrl);
 
     NODE_SET_PROTOTYPE_METHOD(s_ct, "setHtml", SetHtml);
     NODE_SET_PROTOTYPE_METHOD(s_ct, "execute", ExecuteScript);
 
     NODE_SET_PROTOTYPE_METHOD(s_ct, "setSize", SetSize);
-    NODE_SET_PROTOTYPE_METHOD(s_ct, "getSize", GetSize);
-
-    NODE_SET_PROTOTYPE_METHOD(s_ct, "setResizable", SetResizable);
-    NODE_SET_PROTOTYPE_METHOD(s_ct, "getResizable", GetResizable);
 
     NODE_SET_PROTOTYPE_METHOD(s_ct, "setTitle", SetTitle);
-    NODE_SET_PROTOTYPE_METHOD(s_ct, "getTitle", GetTitle);
-
-    NODE_SET_PROTOTYPE_METHOD(s_ct, "getFocused", GetFocused);
 
     target->Set(NODE_SYMBOL("WebKitWindow"), t->GetFunction());
 }
@@ -107,53 +91,6 @@ Handle<Value> WebKitWindow::ProcessEvents(const Arguments &args)
     return scope.Close(args.This());
 }
 
-Handle<Value> WebKitWindow::Open(const Arguments &args)
-{
-    HandleScope scope;
-    WebKitWindow *window = ObjectWrap::Unwrap<WebKitWindow>(args.This());
-    assert(window);
-    assert(window->window_);
-    #if defined Q_OS_SYMBIAN || defined Q_WS_HILDON || defined Q_WS_MAEMO_5 || defined Q_WS_SIMULATOR
-         window->window_->showMaximized();
-    #else
-         window->window_->show();
-    #endif
-    window->Emit("open", 0, NULL);
-    return scope.Close(args.This());
-}
-Handle<Value> WebKitWindow::Close(const Arguments &args)
-{
-    HandleScope scope;
-    WebKitWindow *window = ObjectWrap::Unwrap<WebKitWindow>(args.This());
-    assert(window);
-    assert(window->window_);
-    window->window_->close();
-    window->app_->exit(0);
-    window->Emit("close", 0, NULL);
-    return scope.Close(args.This());
-}
-Handle<Value> WebKitWindow::Reload(const Arguments &args)
-{
-    HandleScope scope;
-    WebKitWindow *window = ObjectWrap::Unwrap<WebKitWindow>(args.This());
-    assert(window);
-    assert(window->view_);
-    window->view_->reload();
-    return scope.Close(args.This());
-}
-Handle<Value> WebKitWindow::Move(const Arguments &args)
-{
-    HandleScope scope;
-    WebKitWindow *window = ObjectWrap::Unwrap<WebKitWindow>(args.This());
-    assert(window);
-    assert(window->window_);
-    ARG_CHECK_UINT32(0, x);
-    ARG_CHECK_UINT32(1, y);
-    int x = args[0]->Int32Value();
-    int y = args[1]->Int32Value();
-    window->window_->move(x, y);
-    return scope.Close(args.This());
-}
 Handle<Value> WebKitWindow::Screenshot(const Arguments &args)
 {
     HandleScope scope;
@@ -163,61 +100,6 @@ Handle<Value> WebKitWindow::Screenshot(const Arguments &args)
     ARG_CHECK_STRING(0, title);
     String::Utf8Value title(args[0]->ToString());
     window->page_->screenshot(QString(*title));
-    return scope.Close(args.This());
-}
-Handle<Value> WebKitWindow::SetMaximized(const Arguments &args)
-{
-    HandleScope scope;
-    WebKitWindow *window = ObjectWrap::Unwrap<WebKitWindow>(args.This());
-    assert(window);
-    assert(window->window_);
-    ARG_CHECK_BOOL(0, maximized);
-    bool maximized = args[0]->BooleanValue();
-    if (maximized)
-    {
-        window->window_->showMaximized();
-    }
-    else
-    {
-        window->window_->showNormal();
-    }
-    return scope.Close(args.This());
-}
-Handle<Value> WebKitWindow::SetMinimized(const Arguments &args)
-{
-    HandleScope scope;
-    WebKitWindow *window = ObjectWrap::Unwrap<WebKitWindow>(args.This());
-    assert(window);
-    assert(window->window_);
-    ARG_CHECK_BOOL(0, minimized);
-    bool minimized = args[0]->BooleanValue();
-    if (minimized)
-    {
-        window->window_->showMinimized();
-    }
-    else
-    {
-        window->window_->showNormal();
-    }
-    return scope.Close(args.This());
-}
-Handle<Value> WebKitWindow::SetFullscreen(const Arguments &args)
-{
-    HandleScope scope;
-    WebKitWindow *window = ObjectWrap::Unwrap<WebKitWindow>(args.This());
-    assert(window);
-    assert(window->window_);
-    ARG_CHECK_BOOL(0, fullscreen);
-    bool fullscreen = args[0]->BooleanValue();
-
-    if (fullscreen)
-    {
-        window->window_->showFullScreen();
-    }
-    else
-    {
-        window->window_->showNormal();
-    }
     return scope.Close(args.This());
 }
 Handle<Value> WebKitWindow::SetTitle(const Arguments &args)
@@ -231,15 +113,6 @@ Handle<Value> WebKitWindow::SetTitle(const Arguments &args)
     window->window_->setWindowTitle(QString(*title));
     return scope.Close(args.This());
 }
-Handle<Value> WebKitWindow::GetTitle(const Arguments &args)
-{
-    HandleScope scope;
-    WebKitWindow *window = ObjectWrap::Unwrap<WebKitWindow>(args.This());
-    assert(window);
-    assert(window->window_);
-    const char *title = CString(window->window_->windowTitle());
-    return scope.Close(NODE_SYMBOL(title));
-}
 Handle<Value> WebKitWindow::SetUrl(const Arguments &args)
 {
     HandleScope scope;
@@ -250,15 +123,6 @@ Handle<Value> WebKitWindow::SetUrl(const Arguments &args)
     String::Utf8Value url(args[0]->ToString());
     window->view_->setUrl(QUrl(*url));
     return scope.Close(args.This());
-}
-Handle<Value> WebKitWindow::GetUrl(const Arguments &args)
-{
-    HandleScope scope;
-    WebKitWindow *window = ObjectWrap::Unwrap<WebKitWindow>(args.This());
-    assert(window);
-    assert(window->view_);
-    const char *uri = CString(window->view_->url().toString());
-    return scope.Close(NODE_SYMBOL(uri));
 }
 Handle<Value> WebKitWindow::SetHtml(const Arguments &args)
 {
@@ -300,52 +164,6 @@ Handle<Value> WebKitWindow::SetSize(const Arguments &args)
     int width = args[1]->ToInteger()->Value();
     window->window_->resize(width, height);
     return scope.Close(args.This());
-}
-Handle<Value> WebKitWindow::GetSize(const Arguments &args)
-{
-    HandleScope scope;
-    WebKitWindow *window = ObjectWrap::Unwrap<WebKitWindow>(args.This());
-    assert(window);
-    assert(window->window_);
-    int height = window->window_->height();
-    int width = window->window_->width();
-    Handle<Array> array = Array::New(2);
-    if (array.IsEmpty())
-    {
-        return Handle<Array>();
-    }
-    array->Set(0, NODE_CONSTANT(height));
-    array->Set(1, NODE_CONSTANT(width));
-    return scope.Close(array);
-}
-Handle<Value> WebKitWindow::SetResizable(const Arguments &args)
-{
-    HandleScope scope;
-    WebKitWindow *window = ObjectWrap::Unwrap<WebKitWindow>(args.This());
-    assert(window);
-    assert(window->window_);
-    ARG_CHECK_BOOL(0, resizable);
-    //TODO
-    return scope.Close(args.This());
-}
-Handle<Value> WebKitWindow::GetResizable(const Arguments &args)
-{
-    HandleScope scope;
-    WebKitWindow *window = ObjectWrap::Unwrap<WebKitWindow>(args.This());
-    assert(window);
-    assert(window->window_);
-    bool resizable = false;
-    //TODO
-    return scope.Close(Boolean::New(resizable));
-}
-Handle<Value> WebKitWindow::GetFocused(const Arguments &args)
-{
-    HandleScope scope;
-    WebKitWindow *window = ObjectWrap::Unwrap<WebKitWindow>(args.This());
-    assert(window);
-    assert(window->window_);
-    bool focused = window->window_->hasFocus();
-    return scope.Close(Boolean::New(focused));
 }
 
 /* Events */

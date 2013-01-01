@@ -23,25 +23,12 @@ class WebKitWindow : public ObjectWrap {
 
       /* FUNCTIONS */
       static Handle<Value> ProcessEvents(const Arguments &args);
-      static Handle<Value> Open(const Arguments &args);
-      static Handle<Value> Close(const Arguments &args);
-      static Handle<Value> Reload(const Arguments &args);
-      static Handle<Value> Move(const Arguments &args);
       static Handle<Value> Screenshot(const Arguments &args);
-      static Handle<Value> SetMaximized(const Arguments &args);
-      static Handle<Value> SetMinimized(const Arguments &args);
-      static Handle<Value> SetFullscreen(const Arguments &args);
       static Handle<Value> SetUrl(const Arguments &args);
-      static Handle<Value> GetUrl(const Arguments &args);
       static Handle<Value> SetHtml(const Arguments &args);
       static Handle<Value> ExecuteScript(const Arguments &args);
       static Handle<Value> SetSize(const Arguments &args);
-      static Handle<Value> GetSize(const Arguments &args);
-      static Handle<Value> SetResizable(const Arguments &args);
-      static Handle<Value> GetResizable(const Arguments &args);
       static Handle<Value> SetTitle(const Arguments &args);
-      static Handle<Value> GetTitle(const Arguments &args);
-      static Handle<Value> GetFocused(const Arguments &args);
 
       /* MISC */
       void PageLoaded(bool success);
