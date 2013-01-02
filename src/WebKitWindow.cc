@@ -13,13 +13,9 @@ WebKitWindow::WebKitWindow() {
 
   app_ = new QApplication(argc, argv);
   app_->processEvents();
-  app_->setOrganizationName("Fractal");
-  app_->setApplicationName("Pane");
-  window_ = new QMainWindow(0);
-  view_ = new QWebView(window_);
+  view_ = new QWebView();
   page_ = new HookedPage(this, view_);
   view_->setPage(page_);
-  window_->setCentralWidget(view_);
 
   view_->settings()->setAttribute(QWebSettings::OfflineStorageDatabaseEnabled, true);
   view_->settings()->setOfflineStoragePath(QDesktopServices::storageLocation(QDesktopServices::DataLocation));
