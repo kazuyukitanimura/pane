@@ -13,21 +13,22 @@ WebKitWindow::WebKitWindow() {
 
   app_ = new QApplication(argc, argv);
   app_->processEvents();
-  view_ = new QWebView();
-  page_ = new HookedPage(this, view_);
-  view_->setPage(page_);
+  //view_ = new QWebView();
+  //page_ = new HookedPage(this, view_);
+  page_ = new HookedPage(this);
+  //view_->setPage(page_);
 
-  view_->settings()->setAttribute(QWebSettings::OfflineStorageDatabaseEnabled, true);
-  view_->settings()->setOfflineStoragePath(QDesktopServices::storageLocation(QDesktopServices::DataLocation));
+  //view_->settings()->setAttribute(QWebSettings::OfflineStorageDatabaseEnabled, true);
+  //view_->settings()->setOfflineStoragePath(QDesktopServices::storageLocation(QDesktopServices::DataLocation));
 
-  view_->settings()->setAttribute(QWebSettings::OfflineWebApplicationCacheEnabled, true);
-  view_->settings()->setOfflineWebApplicationCachePath(QDesktopServices::storageLocation(QDesktopServices::DataLocation));
+  //view_->settings()->setAttribute(QWebSettings::OfflineWebApplicationCacheEnabled, true);
+  //view_->settings()->setOfflineWebApplicationCachePath(QDesktopServices::storageLocation(QDesktopServices::DataLocation));
 
-  view_->settings()->setAttribute(QWebSettings::LocalStorageEnabled, true);
-  view_->settings()->setLocalStoragePath(QDesktopServices::storageLocation(QDesktopServices::DataLocation));
+  //view_->settings()->setAttribute(QWebSettings::LocalStorageEnabled, true);
+  //view_->settings()->setLocalStoragePath(QDesktopServices::storageLocation(QDesktopServices::DataLocation));
 
-  view_->settings()->setAttribute(QWebSettings::PluginsEnabled, false);
-  view_->settings()->setAttribute(QWebSettings::LocalContentCanAccessRemoteUrls, true);
+  //view_->settings()->setAttribute(QWebSettings::PluginsEnabled, false);
+  //view_->settings()->setAttribute(QWebSettings::LocalContentCanAccessRemoteUrls, true);
 }
 
 WebKitWindow::~WebKitWindow() {
@@ -78,7 +79,7 @@ Handle<Value> WebKitWindow::Screenshot(const Arguments &args) {
   HandleScope scope;
   WebKitWindow *window = ObjectWrap::Unwrap<WebKitWindow>(args.This());
   assert(window);
-  assert(window->view_);
+  //assert(window->view_);
   ARG_CHECK_STRING(0, title);
   String::Utf8Value title(args[0]->ToString());
   window->page_->screenshot(QString(*title));
@@ -88,10 +89,11 @@ Handle<Value> WebKitWindow::SetUrl(const Arguments &args) {
   HandleScope scope;
   WebKitWindow *window = ObjectWrap::Unwrap<WebKitWindow>(args.This());
   assert(window);
-  assert(window->view_);
+  //assert(window->view_);
   ARG_CHECK_STRING(0, url);
   String::Utf8Value url(args[0]->ToString());
-  window->view_->setUrl(QUrl(*url));
+  //window->view_->setUrl(QUrl(*url));
+  window->page_->currentFrame()->load(QUrl(*url));
   return scope.Close(args.This());
 }
 
