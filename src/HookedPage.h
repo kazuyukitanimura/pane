@@ -10,7 +10,7 @@ class HookedPage : public QWebPage {
 
   public:
     HookedPage(WebKitWindow *window, QObject *parent = 0);
-    void screenshot(const QString &filename);
+    QByteArray screenshot(const QString &keyWord);
 
   public slots:
     void loadStarted();

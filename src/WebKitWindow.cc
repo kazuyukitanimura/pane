@@ -36,7 +36,7 @@ void WebKitWindow::Initialize(Handle<Object> target) {
   target->Set(NODE_SYMBOL("WebKitWindow"), t->GetFunction());
 }
 
-Handle<Value> WebKitWindow::New (const Arguments &args) {
+Handle<Value> WebKitWindow::New(const Arguments &args) {
   HandleScope scope;
   if (!args.IsConstructCall()) {
     return ThrowException(Exception::TypeError(NODE_SYMBOL("Use the new operator to create instances of this object.")));
@@ -64,10 +64,20 @@ Handle<Value> WebKitWindow::Screenshot(const Arguments &args) {
   HandleScope scope;
   WebKitWindow *window = ObjectWrap::Unwrap<WebKitWindow>(args.This());
   assert(window);
-  ARG_CHECK_STRING(0, title);
-  String::Utf8Value title(args[0]->ToString());
-  window->page_->screenshot(QString(*title));
-  return scope.Close(args.This());
+  ARG_CHECK_STRING(0, keyWord);
+  String::Utf8Value keyWord(args[0]->ToString());
+  QByteArray ba = window->page_->screenshot(QString(*keyWord));
+  int length = ba.size();
+  // http://www.samcday.com.au/blog/2011/03/03/creating-a-proper-buffer-in-a-node-c-addon/
+  Buffer *buf = Buffer::New(length);
+  memcpy(node::Buffer::Data(buf), ba.constData(), length);
+  //return scope.Close(buf->handle_);
+  // It returns SlowBuffer, so make it fast
+  Local<Object> globalObj = Context::GetCurrent()->Global();
+  Local<Function> bufferConstructor = Local<Function>::Cast(globalObj->Get(String::New("Buffer")));
+  Handle<Value> constructorArgs[3] = { buf->handle_, Integer::New(length), Integer::New(0) };
+  Local<Object> actualBuffer = bufferConstructor->NewInstance(3, constructorArgs);
+  return scope.Close(actualBuffer);
 }
 Handle<Value> WebKitWindow::SetUrl(const Arguments &args) {
   HandleScope scope;
@@ -140,7 +150,7 @@ bool WebKitWindow::Emit(const char *event, int argCount, Handle<Value> emitArgs[
 }
 
 extern "C" {
-  static void init (Handle<Object> target) {
+  static void init(Handle<Object> target) {
     HandleScope scope;
     WebKitWindow::Initialize(target);
   }

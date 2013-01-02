@@ -19,15 +19,10 @@ void HookedPage::javaScriptConsoleMessage(const QString &message, int line, cons
   window_->ConsoleMessage(message, line, fi.fileName());
 }
 
-void HookedPage::screenshot(const QString &filename) {
-  QSize oldSize = viewportSize();
-  setViewportSize(mainFrame()->contentsSize());
-  QImage *image = new QImage(mainFrame()->contentsSize(), QImage::Format_ARGB32);
-  QPainter *painter = new QPainter(image);
-  mainFrame()->render(painter);
-  painter->end();
-  image->save(filename);
-  setViewportSize(oldSize);
+QByteArray HookedPage::screenshot(const QString &keyWord) {
+  QStringList keyWords = keyWord.split(QRegExp("\\s+"));
+  // 985 is the default width used by Apple
+  return highlightRect(keyWords, 985);
 }
 
 #include "HookedPage.moc"
