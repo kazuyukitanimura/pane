@@ -36,7 +36,6 @@ class WebKitWindow : public ObjectWrap {
     static Persistent<FunctionTemplate> s_ct;
     static Handle<Value> New(const Arguments &args);
     QApplication *app_;
-    //QWebView *view_;
     HookedPage *page_;
 };
 
