@@ -46,8 +46,6 @@ void WebKitWindow::Initialize(Handle<Object> target) {
   NODE_SET_PROTOTYPE_METHOD(s_ct, "processEvents", ProcessEvents);
   NODE_SET_PROTOTYPE_METHOD(s_ct, "screenshot", Screenshot);
   NODE_SET_PROTOTYPE_METHOD(s_ct, "setUrl", SetUrl);
-  NODE_SET_PROTOTYPE_METHOD(s_ct, "setHtml", SetHtml);
-  NODE_SET_PROTOTYPE_METHOD(s_ct, "execute", ExecuteScript);
 
   target->Set(NODE_SYMBOL("WebKitWindow"), t->GetFunction());
 }
@@ -95,32 +93,6 @@ Handle<Value> WebKitWindow::SetUrl(const Arguments &args) {
   String::Utf8Value url(args[0]->ToString());
   window->view_->setUrl(QUrl(*url));
   return scope.Close(args.This());
-}
-Handle<Value> WebKitWindow::SetHtml(const Arguments &args) {
-  HandleScope scope;
-  WebKitWindow *window = ObjectWrap::Unwrap<WebKitWindow>(args.This());
-  assert(window);
-  assert(window->view_);
-  ARG_CHECK_STRING(0, html);
-  ARG_CHECK_OPTIONAL_STRING(1, baseUrl);
-  String::Utf8Value html(args[0]->ToString());
-  if (args.Length() > 1) {
-    String::Utf8Value baseUrl(args[1]->ToString());
-    window->view_->setHtml(QString(*html), QUrl(*baseUrl));
-  } else {
-    window->view_->setHtml(QString(*html), QUrl("file:///"));
-  }
-  return scope.Close(args.This());
-}
-Handle<Value> WebKitWindow::ExecuteScript(const Arguments &args) {
-  HandleScope scope;
-  WebKitWindow *window = ObjectWrap::Unwrap<WebKitWindow>(args.This());
-  assert(window);
-  assert(window->view_);
-  ARG_CHECK_STRING(0, script);
-  String::Utf8Value script(args[0]->ToString());
-  QString out = window->view_->page()->mainFrame()->evaluateJavaScript(*script).toString();
-  return scope.Close(NODE_SYMBOL(out.toAscii()));
 }
 
 /* Events */

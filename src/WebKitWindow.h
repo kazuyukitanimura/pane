@@ -6,7 +6,6 @@
 #include <assert.h>
 
 #include <QApplication>
-#include <QMainWindow>
 #include <QtGui>
 #include <QtWebKit>
 
@@ -25,8 +24,6 @@ class WebKitWindow : public ObjectWrap {
     static Handle<Value> ProcessEvents(const Arguments &args);
     static Handle<Value> Screenshot(const Arguments &args);
     static Handle<Value> SetUrl(const Arguments &args);
-    static Handle<Value> SetHtml(const Arguments &args);
-    static Handle<Value> ExecuteScript(const Arguments &args);
 
     /* MISC */
     void PageLoaded(bool success);
