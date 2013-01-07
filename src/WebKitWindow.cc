@@ -59,7 +59,6 @@ Handle<Value> WebKitWindow::ProcessEvents(const Arguments &args) {
   }
   return scope.Close(args.This());
 }
-
 Handle<Value> WebKitWindow::Screenshot(const Arguments &args) {
   HandleScope scope;
   WebKitWindow *window = ObjectWrap::Unwrap<WebKitWindow>(args.This());
