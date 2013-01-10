@@ -295,6 +295,7 @@ public:
     QVariant inputMethodQuery(Qt::InputMethodQuery property) const;
 
     bool findText(const QString &subString, FindFlags options = 0);
+    void markWords(int width);
     QByteArray highlightRect(const QStringList &keyWords, int width);
 
     void setForwardUnsupportedContent(bool forward);

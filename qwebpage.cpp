@@ -3630,6 +3630,44 @@ bool QWebPage::findText(const QString &subString, FindFlags options)
     }
 }
 
+void QWebPage::markWords(int width)
+{
+    WebCore::Frame* frame = d->page->mainFrame();
+    WebCore::FrameView* view = frame->view();
+    int height = view->contentsHeight();
+    view->resize(width, height);
+    view->adjustViewSize();
+
+    while (frame) {
+      if (WebCore::FrameView* view = frame->view()) {
+        // disable scroll bars
+        view->setHorizontalScrollbarMode(ScrollbarAlwaysOff, true);
+        view->setVerticalScrollbarMode(ScrollbarAlwaysOff, true);
+        view->updateCanHaveScrollbars();
+
+        // set background color to white
+        view->setTransparent(false);
+        view->setBaseBackgroundColor(Color("#FFF"));
+      }
+
+      // Editor::countMatchesForText
+      WebCore::DocumentMarkerController* marker = frame->document()->markers();
+      RefPtr<Range> searchRange = rangeOfContents(frame->document());
+      // DocumentMarkerController::addTextMatchMarker
+      for (WordAwareIterator markedText(searchRange.get()); !markedText.atEnd(); markedText.advance()) {
+        RefPtr<Range> textPiece = markedText.range();
+        int exception = 0;
+        unsigned startOffset = textPiece->startOffset(exception);
+        unsigned endOffset = textPiece->endOffset(exception);
+        if (endOffset > startOffset) {
+          WebCore::IntRect r = textPiece->boundingBox();
+          qDebug() << markedText.characters() << ", x: " << r.x() << ", y: " << r.y() << ", width: " << r.width() << ", height: " << r.height() << "\n";
+        }
+      }
+      frame = frame->tree()->traverseNextWithWrap(false);
+    }
+}
+
 QByteArray QWebPage::highlightRect(const QStringList &keyWords, int width)
 {
     WebCore::Frame* frame = d->page->mainFrame();
@@ -3656,19 +3694,19 @@ QByteArray QWebPage::highlightRect(const QStringList &keyWords, int width)
       for ( QList<QString>::const_iterator it = keyWords.constBegin(); it != keyWords.constEnd(); ++it ) {
         editor->countMatchesForText((*it), 0, ::CaseInsensitive, 0, true);
       }
-      WebCore::DocumentMarkerController* markers = frame->document()->markers();
-      WTF::Vector<IntRect> rectListTmp = markers->renderedRectsForMarkers(WebCore::DocumentMarker::TextMatch);
-      //rectList.insert(rectList.size(), rectListTmp); // concat
-      for (int i = 0; i < rectListTmp.size(); i++) {
-        WebCore::IntRect r = rectListTmp.at(i);
-        qDebug() << "x: " << r.x() << ", y: " << r.y() << ", maxX: " << r.maxX() << ", maxY: " << r.maxY() << "\n";
-        // Algorithm to check the boundary O(N log N)
-        // 1. sort by y
-        // 2. start checking from the rect that has the smallest y
-        //  2.1. if maxY of the rect is inside the boundary, mark it and goto step 2; othersize goto step 3
-        // 3. the rect(s) in the boundary are the marked rects
-        // 4. from the next time, step 2 should start from unmarked rects
-      }
+      //WebCore::DocumentMarkerController* markers = frame->document()->markers();
+      //WTF::Vector<IntRect> rectListTmp = markers->renderedRectsForMarkers(WebCore::DocumentMarker::TextMatch);
+      ////rectList.insert(rectList.size(), rectListTmp); // concat
+      //for (int i = 0; i < rectListTmp.size(); i++) {
+      //  WebCore::IntRect r = rectListTmp.at(i);
+      //  qDebug() << "x: " << r.x() << ", y: " << r.y() << ", maxX: " << r.maxX() << ", maxY: " << r.maxY() << "\n";
+      //  // Algorithm to check the boundary O(N log N)
+      //  // 1. sort by y
+      //  // 2. start checking from the rect that has the smallest y
+      //  //  2.1. if maxY of the rect is inside the boundary, mark it and goto step 2; othersize goto step 3
+      //  // 3. the rect(s) in the boundary are the marked rects
+      //  // 4. from the next time, step 2 should start from unmarked rects
+      //}
       frame = frame->tree()->traverseNextWithWrap(false);
     }
 
