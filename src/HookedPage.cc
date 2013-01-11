@@ -22,6 +22,7 @@ void HookedPage::javaScriptConsoleMessage(const QString &message, int line, cons
 QByteArray HookedPage::screenshot(const QString &keyWord) {
   QStringList keyWords = keyWord.split(QRegExp("\\s+"));
   // 985 is the default width used by Apple
+  markWords(985);
   return highlightRect(keyWords, 985);
 }
 
