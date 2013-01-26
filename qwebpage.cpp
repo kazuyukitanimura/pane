@@ -3652,26 +3652,21 @@ void QWebPage::markWords(int width)
         view->setBaseBackgroundColor(Color("#FFF"));
       }
 
-      // Editor::countMatchesForText
-      //WebCore::DocumentMarkerController* marker = frame->document()->markers();
       RefPtr<Range> searchRange = rangeOfContents(frame->document());
-      // DocumentMarkerController::addTextMatchMarker
-      for (WordAwareIterator markedText(searchRange.get()); !markedText.atEnd(); markedText.advance()) {
-        RefPtr<Range> textPiece = markedText.range();
+      for (WordAwareIterator nodeText(searchRange.get()); !nodeText.atEnd(); nodeText.advance()) {
+        RefPtr<Range> textPiece = nodeText.range();
         int exception = 0;
         unsigned startOffset = textPiece->startOffset(exception);
         unsigned endOffset = textPiece->endOffset(exception);
         if (endOffset > startOffset) {
           WebCore::IntRect r = textPiece->boundingBox();
-          const UChar* chars = markedText.characters();
-          int len = markedText.length();
+          const UChar* chars = nodeText.characters();
+          int len = nodeText.length();
           // Skip some work for one-space-char hunks
-          if (!(len == 1 && chars[0] == ' ')) {
+          if (!(len == 1 && chars[0] == ' ') && r.width() > 0 && r.height() > 0 && width >= r.maxX() && height >= r.maxY()) {
             const QString text = QString::fromRawData(reinterpret_cast<const QChar*>(chars), len); // use WebString for cromium build
             qDebug() << text << ", x: " << r.x() << ", y: " << r.y() << ", width: " << r.width() << ", height: " << r.height();
           }
-        } else {
-          qDebug() << "WTF";
         }
       }
       frame = frame->tree()->traverseNextWithWrap(false);
