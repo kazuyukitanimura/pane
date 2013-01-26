@@ -3638,6 +3638,8 @@ void QWebPage::markWords(int width)
     view->resize(width, height);
     view->adjustViewSize();
 
+    // Do we need to draw first? I.e., do we need to updateLayoutAndStyleIfNeededRecursive?
+
     while (frame) {
       if (WebCore::FrameView* view = frame->view()) {
         // disable scroll bars
@@ -3651,7 +3653,7 @@ void QWebPage::markWords(int width)
       }
 
       // Editor::countMatchesForText
-      WebCore::DocumentMarkerController* marker = frame->document()->markers();
+      //WebCore::DocumentMarkerController* marker = frame->document()->markers();
       RefPtr<Range> searchRange = rangeOfContents(frame->document());
       // DocumentMarkerController::addTextMatchMarker
       for (WordAwareIterator markedText(searchRange.get()); !markedText.atEnd(); markedText.advance()) {
