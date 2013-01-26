@@ -3663,7 +3663,15 @@ void QWebPage::markWords(int width)
         unsigned endOffset = textPiece->endOffset(exception);
         if (endOffset > startOffset) {
           WebCore::IntRect r = textPiece->boundingBox();
-          qDebug() << markedText.characters() << ", x: " << r.x() << ", y: " << r.y() << ", width: " << r.width() << ", height: " << r.height() << "\n";
+          const UChar* chars = markedText.characters();
+          int len = markedText.length();
+          // Skip some work for one-space-char hunks
+          if (!(len == 1 && chars[0] == ' ')) {
+            const QString text = QString::fromRawData(reinterpret_cast<const QChar*>(chars), len); // use WebString for cromium build
+            qDebug() << text << ", x: " << r.x() << ", y: " << r.y() << ", width: " << r.width() << ", height: " << r.height();
+          }
+        } else {
+          qDebug() << "WTF";
         }
       }
       frame = frame->tree()->traverseNextWithWrap(false);
