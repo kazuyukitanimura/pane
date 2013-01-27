@@ -3652,8 +3652,8 @@ void QWebPage::markWords(int width)
     int height = view->contentsHeight();
     view->resize(width, height);
     view->adjustViewSize();
-
-    // Do we need to draw first? I.e., do we need to updateLayoutAndStyleIfNeededRecursive?
+    // require renderers to be up-to-date
+    view->updateLayoutAndStyleIfNeededRecursive();
 
     while (frame) {
       if (WebCore::FrameView* view = frame->view()) {
