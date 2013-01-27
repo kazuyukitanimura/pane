@@ -3653,6 +3653,24 @@ void QWebPage::markWords(int width)
       }
 
       RefPtr<Range> docRange = rangeOfContents(frame->document());
+      //for (CharacterIterator ci(docRange.get(), TextIteratorEntersTextControls), RefPtr<Range> start = end = ci.range(); !ci.atEnd(); ci.advance()) {
+      //  const UChar* chars = ci.characters();
+      //  for (int len = ci.length(), i =0; i < len; i++) {
+      //    if (isSpaceOrNewline(ci.characters()[0]) || ci.atEnd()) {
+      //      if (len > 0) {
+      //        RefPtr<Range> wordRange = Range::create(start->startContainer()->document(),
+      //                                                start->startContainer(), start->startOffset(),
+      //                                                end->endContainer(), end->endOffset());
+      //        WebCore::IntRect r = wordRange->boundingBox();
+      //      }
+
+      //      len = 0; // reset length
+      //      ci.advance(1); // advance for the next char
+      //      start = ci.range(); // reset start
+      //    }
+      //    end = ci.range(); // always update end
+      //  }
+      //}
       for (WordAwareIterator wai(docRange.get()); !wai.atEnd(); wai.advance()) {
         RefPtr<Range> waiRange = wai.range();
         int exception = 0;
@@ -3663,7 +3681,7 @@ void QWebPage::markWords(int width)
           const UChar* chars = wai.characters();
           int len = wai.length();
           if (len > 0 && !(len == 1 && chars[0] == ' ') && r.width() > 0 && r.height() > 0 && width >= r.maxX() && height >= r.maxY()) {
-            qDebug() << "x: " << r.x() << ", y: " << r.y() << ", width: " << r.width() << ", height: " << r.height();
+            // qDebug() << "x: " << r.x() << ", y: " << r.y() << ", width: " << r.width() << ", height: " << r.height();
             CharacterIterator ci(waiRange.get(), TextIteratorEntersTextControls);
             for (int i = 0, offset = 0; i < len; i++) {
               if (isSpaceOrNewline(chars[i]) || len == i + 1) {
