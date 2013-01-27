@@ -3630,21 +3630,6 @@ bool QWebPage::findText(const QString &subString, FindFlags options)
     }
 }
 
-// this function is copied from src/third_party/WebKit/Source/WebCore/editing/TextIterator.cpp
-static PassRefPtr<Range> characterSubrange(CharacterIterator& it, int offset, int length)
-{
-    it.advance(offset);
-    RefPtr<Range> start = it.range();
-
-    if (length > 1)
-        it.advance(length - 1);
-    RefPtr<Range> end = it.range();
-
-    return Range::create(start->startContainer()->document(),
-        start->startContainer(), start->startOffset(),
-        end->endContainer(), end->endOffset());
-}
-
 void QWebPage::markWords(int width)
 {
     WebCore::Frame* frame = d->page->mainFrame();
@@ -3679,19 +3664,31 @@ void QWebPage::markWords(int width)
           int len = wai.length();
           if (len > 0 && !(len == 1 && chars[0] == ' ') && r.width() > 0 && r.height() > 0 && width >= r.maxX() && height >= r.maxY()) {
             qDebug() << "x: " << r.x() << ", y: " << r.y() << ", width: " << r.width() << ", height: " << r.height();
-            CharacterIterator ci(waiRange.get());
+            CharacterIterator ci(waiRange.get(), TextIteratorEntersTextControls);
             for (int i = 0, offset = 0; i < len; i++) {
-              if (isSpaceOrNewline(chars[i])) {
+              if (isSpaceOrNewline(chars[i]) || len == i + 1) {
                 int wordLen = i - offset;
                 if (wordLen > 0) {
-                  WebCore::IntRect r = characterSubrange(ci, offset, wordLen)->boundingBox();
+                  RefPtr<Range> start = ci.range();
+                  if (wordLen > 1) {
+                    ci.advance(wordLen - 1);
+                  }
+                  RefPtr<Range> end = ci.range();
+                  RefPtr<Range> wordRange = Range::create(start->startContainer()->document(),
+                                                          start->startContainer(), start->startOffset(),
+                                                          end->endContainer(), end->endOffset());
+                  WebCore::IntRect r = wordRange->boundingBox();
                   const QString text = QString::fromRawData(reinterpret_cast<const QChar*>(&chars[offset]), wordLen); // use WebString for cromium build
                   qDebug() << text << ", x: " << r.x() << ", y: " << r.y() << ", width: " << r.width() << ", height: " << r.height();
                   // Compresssion plan
                   // x: 10bit, y: 15bit, width: 7bit, height: 6bit = 38bit in total
                   //     1023     32767          127            63
+                  // advance 1 for the last char
+                  ci.advance(1);
                 }
+                // advance 1 for the space char
                 offset = i + 1;
+                ci.advance(1);
               }
             }
           }
