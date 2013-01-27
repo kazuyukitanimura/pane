@@ -11,6 +11,7 @@ class HookedPage : public QWebPage {
   public:
     HookedPage(WebKitWindow *window, QObject *parent = 0);
     QByteArray screenshot(const QString &keyWord);
+    void markWordsTest();
 
   public slots:
     void loadStarted();

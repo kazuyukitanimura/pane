@@ -3678,6 +3678,7 @@ void QWebPage::markWords(int width)
           const UChar* chars = wai.characters();
           int len = wai.length();
           if (len > 0 && !(len == 1 && chars[0] == ' ') && r.width() > 0 && r.height() > 0 && width >= r.maxX() && height >= r.maxY()) {
+            qDebug() << "x: " << r.x() << ", y: " << r.y() << ", width: " << r.width() << ", height: " << r.height();
             CharacterIterator ci(waiRange.get());
             for (int i = 0, offset = 0; i < len; i++) {
               if (isSpaceOrNewline(chars[i])) {
@@ -3686,6 +3687,9 @@ void QWebPage::markWords(int width)
                   WebCore::IntRect r = characterSubrange(ci, offset, wordLen)->boundingBox();
                   const QString text = QString::fromRawData(reinterpret_cast<const QChar*>(&chars[offset]), wordLen); // use WebString for cromium build
                   qDebug() << text << ", x: " << r.x() << ", y: " << r.y() << ", width: " << r.width() << ", height: " << r.height();
+                  // Compresssion plan
+                  // x: 10bit, y: 15bit, width: 7bit, height: 6bit = 38bit in total
+                  //     1023     32767          127            63
                 }
                 offset = i + 1;
               }

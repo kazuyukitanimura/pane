@@ -25,6 +25,7 @@ class WebKitWindow : public ObjectWrap {
     static Handle<Value> ProcessEvents(const Arguments &args);
     static Handle<Value> Screenshot(const Arguments &args);
     static Handle<Value> SetUrl(const Arguments &args);
+    static Handle<Value> MarkWordsTest(const Arguments &args);
 
     /* MISC */
     void PageLoaded(bool success);

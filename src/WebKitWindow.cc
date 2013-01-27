@@ -32,6 +32,7 @@ void WebKitWindow::Initialize(Handle<Object> target) {
   NODE_SET_PROTOTYPE_METHOD(s_ct, "processEvents", ProcessEvents);
   NODE_SET_PROTOTYPE_METHOD(s_ct, "screenshot", Screenshot);
   NODE_SET_PROTOTYPE_METHOD(s_ct, "setUrl", SetUrl);
+  NODE_SET_PROTOTYPE_METHOD(s_ct, "markWordsTest", MarkWordsTest);
 
   target->Set(NODE_SYMBOL("WebKitWindow"), t->GetFunction());
 }
@@ -85,6 +86,13 @@ Handle<Value> WebKitWindow::SetUrl(const Arguments &args) {
   ARG_CHECK_STRING(0, url);
   String::Utf8Value url(args[0]->ToString());
   window->page_->currentFrame()->load(QUrl(*url));
+  return scope.Close(args.This());
+}
+Handle<Value> WebKitWindow::MarkWordsTest(const Arguments &args) {
+  HandleScope scope;
+  WebKitWindow *window = ObjectWrap::Unwrap<WebKitWindow>(args.This());
+  assert(window);
+  window->page_->markWordsTest();
   return scope.Close(args.This());
 }
 
