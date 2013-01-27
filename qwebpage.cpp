@@ -3630,6 +3630,21 @@ bool QWebPage::findText(const QString &subString, FindFlags options)
     }
 }
 
+// this function is copied from src/third_party/WebKit/Source/WebCore/editing/TextIterator.cpp
+static PassRefPtr<Range> characterSubrange(CharacterIterator& it, int offset, int length)
+{
+    it.advance(offset);
+    RefPtr<Range> start = it.range();
+
+    if (length > 1)
+        it.advance(length - 1);
+    RefPtr<Range> end = it.range();
+
+    return Range::create(start->startContainer()->document(),
+        start->startContainer(), start->startOffset(),
+        end->endContainer(), end->endOffset());
+}
+
 void QWebPage::markWords(int width)
 {
     WebCore::Frame* frame = d->page->mainFrame();
@@ -3652,20 +3667,29 @@ void QWebPage::markWords(int width)
         view->setBaseBackgroundColor(Color("#FFF"));
       }
 
-      RefPtr<Range> searchRange = rangeOfContents(frame->document());
-      for (WordAwareIterator nodeText(searchRange.get()); !nodeText.atEnd(); nodeText.advance()) {
-        RefPtr<Range> textPiece = nodeText.range();
+      RefPtr<Range> docRange = rangeOfContents(frame->document());
+      for (WordAwareIterator wai(docRange.get()); !wai.atEnd(); wai.advance()) {
+        RefPtr<Range> waiRange = wai.range();
         int exception = 0;
-        unsigned startOffset = textPiece->startOffset(exception);
-        unsigned endOffset = textPiece->endOffset(exception);
+        unsigned startOffset = waiRange->startOffset(exception);
+        unsigned endOffset = waiRange->endOffset(exception);
         if (endOffset > startOffset) {
-          WebCore::IntRect r = textPiece->boundingBox();
-          const UChar* chars = nodeText.characters();
-          int len = nodeText.length();
-          // Skip some work for one-space-char hunks
-          if (!(len == 1 && chars[0] == ' ') && r.width() > 0 && r.height() > 0 && width >= r.maxX() && height >= r.maxY()) {
-            const QString text = QString::fromRawData(reinterpret_cast<const QChar*>(chars), len); // use WebString for cromium build
-            qDebug() << text << ", x: " << r.x() << ", y: " << r.y() << ", width: " << r.width() << ", height: " << r.height();
+          WebCore::IntRect r = waiRange->boundingBox();
+          const UChar* chars = wai.characters();
+          int len = wai.length();
+          if (len > 0 && !(len == 1 && chars[0] == ' ') && r.width() > 0 && r.height() > 0 && width >= r.maxX() && height >= r.maxY()) {
+            CharacterIterator ci(waiRange.get());
+            for (int i = 0, offset = 0; i < len; i++) {
+              if (isSpaceOrNewline(chars[i])) {
+                int wordLen = i - offset;
+                if (wordLen > 0) {
+                  WebCore::IntRect r = characterSubrange(ci, offset, wordLen)->boundingBox();
+                  const QString text = QString::fromRawData(reinterpret_cast<const QChar*>(&chars[offset]), wordLen); // use WebString for cromium build
+                  qDebug() << text << ", x: " << r.x() << ", y: " << r.y() << ", width: " << r.width() << ", height: " << r.height();
+                }
+                offset = i + 1;
+              }
+            }
           }
         }
       }
