@@ -3677,12 +3677,28 @@ void QWebPage::markWords(int width)
                 buf.clear();
               }
 
-              for(ci.advance(1); isSpaceOrNewline(ci.characters()[0]) && !ci.atEnd(); ci.advance(1)) {}// skip trailing spaces and advance for the next char
+              // skip trailing spaces and advance for the next char
+              const UChar* chars = ci.characters();
+              for (int i = 0, l = ci.length(); i < len; i++) {
+                if (!isSpaceOrNewline(&(chars[i]))) {
+                  ci.advance(i);
+                  break;
+                }
+              }
+              //for (ci.advance(1); isSpaceOrNewline(ci.characters()[0]) && !ci.atEnd(); ci.advance(1)) {}// skip trailing spaces and advance for the next char
               start = ci.range(); // reset start
             }
             end = ci.range(); // always update end
+            const UChar* chars = ci.characters();
+            for (int i = 0, l = ci.length(); i < len; i++) {
+              if (isSpaceOrNewline(&(chars[i]))) {
+                ci.advance(i);
+                buf.append(chars, i);
+                break;
+              }
+            }
             // FIXME copying character by character might be inefficient
-            buf.append(ci.characters(), 1);
+            //buf.append(ci.characters(), 1);
           }
         }
       }
