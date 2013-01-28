@@ -3652,66 +3652,82 @@ void QWebPage::markWords(int width)
         view->setBaseBackgroundColor(Color("#FFF"));
       }
 
-      RefPtr<Range> docRange = rangeOfContents(frame->document());
-      //for (CharacterIterator ci(docRange.get(), TextIteratorEntersTextControls), RefPtr<Range> start = end = ci.range(); !ci.atEnd(); ci.advance()) {
-      //  const UChar* chars = ci.characters();
-      //  for (int len = ci.length(), i =0; i < len; i++) {
-      //    if (isSpaceOrNewline(ci.characters()[0]) || ci.atEnd()) {
-      //      if (len > 0) {
-      //        RefPtr<Range> wordRange = Range::create(start->startContainer()->document(),
-      //                                                start->startContainer(), start->startOffset(),
-      //                                                end->endContainer(), end->endOffset());
-      //        WebCore::IntRect r = wordRange->boundingBox();
-      //      }
-
-      //      len = 0; // reset length
-      //      ci.advance(1); // advance for the next char
-      //      start = ci.range(); // reset start
-      //    }
-      //    end = ci.range(); // always update end
-      //  }
-      //}
-      for (WordAwareIterator wai(docRange.get()); !wai.atEnd(); wai.advance()) {
-        RefPtr<Range> waiRange = wai.range();
-        int exception = 0;
-        unsigned startOffset = waiRange->startOffset(exception);
-        unsigned endOffset = waiRange->endOffset(exception);
-        if (endOffset > startOffset) {
-          WebCore::IntRect r = waiRange->boundingBox();
-          const UChar* chars = wai.characters();
-          int len = wai.length();
-          if (len > 0 && !(len == 1 && chars[0] == ' ') && r.width() > 0 && r.height() > 0 && width >= r.maxX() && height >= r.maxY()) {
-            // qDebug() << "x: " << r.x() << ", y: " << r.y() << ", width: " << r.width() << ", height: " << r.height();
-            CharacterIterator ci(waiRange.get(), TextIteratorEntersTextControls);
-            for (int i = 0, offset = 0; i < len; i++) {
-              if (isSpaceOrNewline(chars[i]) || len == i + 1) {
-                int wordLen = i - offset;
-                if (wordLen > 0) {
-                  RefPtr<Range> start = ci.range();
-                  if (wordLen > 1) {
-                    ci.advance(wordLen - 1);
-                  }
-                  RefPtr<Range> end = ci.range();
-                  RefPtr<Range> wordRange = Range::create(start->startContainer()->document(),
-                                                          start->startContainer(), start->startOffset(),
-                                                          end->endContainer(), end->endOffset());
-                  WebCore::IntRect r = wordRange->boundingBox();
-                  const QString text = QString::fromRawData(reinterpret_cast<const QChar*>(&chars[offset]), wordLen); // use WebString for cromium build
-                  qDebug() << text << ", x: " << r.x() << ", y: " << r.y() << ", width: " << r.width() << ", height: " << r.height();
-                  // Compresssion plan
-                  // x: 10bit, y: 15bit, width: 7bit, height: 6bit = 38bit in total
-                  //     1023     32767          127            63
-                  // advance 1 for the last char
-                  ci.advance(1);
-                }
-                // advance 1 for the space char
-                offset = i + 1;
-                ci.advance(1);
+      {
+        RefPtr<Range> docRange = rangeOfContents(frame->document());
+        CharacterIterator ci(docRange.get(), TextIteratorEntersTextControls);
+        RefPtr<Range> start = ci.range();
+        RefPtr<Range> end = ci.range();
+        Vector<UChar> buf;
+        for (; !ci.atEnd(); ci.advance(1)) {
+          if (ci.length() > 0) {
+            if (isSpaceOrNewline(ci.characters()[0]) || ci.atEnd()) {
+              if (ci.atEnd()) {
+                end = ci.range();
+                buf.append(ci.characters(), 1);
               }
+              if (!buf.isEmpty()) {
+                RefPtr<Range> wordRange = Range::create(start->startContainer()->document(),
+                                                        start->startContainer(), start->startOffset(),
+                                                        end->endContainer(), end->endOffset());
+                WebCore::IntRect r = wordRange->boundingBox();
+                if (r.width() > 0 && r.height() > 0 && width >= r.maxX() && height >= r.maxY()) {
+                  const QString text = QString::fromRawData(reinterpret_cast<const QChar*>(buf.data()), buf.size()); // use WebString for cromium build
+                  qDebug() << text << ", x: " << r.x() << ", y: " << r.y() << ", width: " << r.width() << ", height: " << r.height();
+                }
+                buf.clear();
+              }
+
+              for(ci.advance(1); isSpaceOrNewline(ci.characters()[0]) && !ci.atEnd(); ci.advance(1)) {}// skip trailing spaces and advance for the next char
+              start = ci.range(); // reset start
             }
+            end = ci.range(); // always update end
+            // FIXME copying character by character might be inefficient
+            buf.append(ci.characters(), 1);
           }
         }
       }
+      //RefPtr<Range> docRange = rangeOfContents(frame->document());
+      //for (WordAwareIterator wai(docRange.get()); !wai.atEnd(); wai.advance()) {
+      //  RefPtr<Range> waiRange = wai.range();
+      //  int exception = 0;
+      //  unsigned startOffset = waiRange->startOffset(exception);
+      //  unsigned endOffset = waiRange->endOffset(exception);
+      //  if (endOffset > startOffset) {
+      //    WebCore::IntRect r = waiRange->boundingBox();
+      //    const UChar* chars = wai.characters();
+      //    int len = wai.length();
+      //    if (len > 0 && !(len == 1 && chars[0] == ' ') && r.width() > 0 && r.height() > 0 && width >= r.maxX() && height >= r.maxY()) {
+      //      // qDebug() << "x: " << r.x() << ", y: " << r.y() << ", width: " << r.width() << ", height: " << r.height();
+      //      CharacterIterator ci(waiRange.get(), TextIteratorEntersTextControls);
+      //      for (int i = 0, offset = 0; i < len; i++) {
+      //        if (isSpaceOrNewline(chars[i]) || len == i + 1) {
+      //          int wordLen = i - offset;
+      //          if (wordLen > 0) {
+      //            RefPtr<Range> start = ci.range();
+      //            if (wordLen > 1) {
+      //              ci.advance(wordLen - 1);
+      //            }
+      //            RefPtr<Range> end = ci.range();
+      //            RefPtr<Range> wordRange = Range::create(start->startContainer()->document(),
+      //                                                    start->startContainer(), start->startOffset(),
+      //                                                    end->endContainer(), end->endOffset());
+      //            WebCore::IntRect r = wordRange->boundingBox();
+      //            const QString text = QString::fromRawData(reinterpret_cast<const QChar*>(&chars[offset]), wordLen); // use WebString for cromium build
+      //            qDebug() << text << ", x: " << r.x() << ", y: " << r.y() << ", width: " << r.width() << ", height: " << r.height();
+      //            // Compresssion plan
+      //            // x: 10bit, y: 15bit, width: 7bit, height: 6bit = 38bit in total
+      //            //     1023     32767          127            63
+      //            // advance 1 for the last char
+      //            ci.advance(1);
+      //          }
+      //          // advance 1 for the space char
+      //          offset = i + 1;
+      //          ci.advance(1);
+      //        }
+      //      }
+      //    }
+      //  }
+      //}
       frame = frame->tree()->traverseNextWithWrap(false);
     }
 }
