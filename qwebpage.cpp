@@ -3657,17 +3657,10 @@ void QWebPage::markWords(int width)
         CharacterIterator ci(docRange.get(), TextIteratorEntersTextControls);
         RefPtr<Range> start = ci.range();
         RefPtr<Range> end = ci.range();
-        Vector<UChar> buf;
-        for (; !ci.atEnd(); ci.advance(1)) {
+        for (Vector<UChar> buf; !ci.atEnd(); ci.advance(1)) {
           if (ci.length() > 0) {
             const UChar* chars = ci.characters();
             if (isSpaceOrNewline(chars[0])) {
-            //if (isSpaceOrNewline(ci.characters()[0]) || ci.atEnd()) {
-              //if (ci.atEnd()) {
-              //  end = ci.range();
-              //  buf.append(chars, 1);
-              //  //buf.append(ci.characters(), 1);
-              //}
               if (!buf.isEmpty()) {
                 RefPtr<Range> wordRange = Range::create(start->startContainer()->document(),
                                                         start->startContainer(), start->startOffset(),
@@ -3679,7 +3672,6 @@ void QWebPage::markWords(int width)
                 }
                 buf.clear();
               }
-
               // skip trailing spaces & newlines and advance for the next char
               int i = 1; // skip at least current one
               for (int l = ci.length(); i < l; i++) {
@@ -3689,7 +3681,6 @@ void QWebPage::markWords(int width)
               }
               ci.advance(i);
               chars = ci.characters();
-              //for (ci.advance(1); isSpaceOrNewline(ci.characters()[0]) && !ci.atEnd(); ci.advance(1)) {}// skip trailing spaces and advance for the next char
               start = ci.range(); // reset start
             }
             // even at this point, the head of ci still could be a space or newline
@@ -3704,8 +3695,6 @@ void QWebPage::markWords(int width)
             }
             buf.append(chars, i); // copy the word
             end = ci.range(); // always update end
-            // FIXME copying character by character might be inefficient
-            //buf.append(ci.characters(), 1);
           }
         }
       }
