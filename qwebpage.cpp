@@ -3660,11 +3660,14 @@ void QWebPage::markWords(int width)
         Vector<UChar> buf;
         for (; !ci.atEnd(); ci.advance(1)) {
           if (ci.length() > 0) {
-            if (isSpaceOrNewline(ci.characters()[0]) || ci.atEnd()) {
-              if (ci.atEnd()) {
-                end = ci.range();
-                buf.append(ci.characters(), 1);
-              }
+            const UChar* chars = ci.characters();
+            if (isSpaceOrNewline(chars[0])) {
+            //if (isSpaceOrNewline(ci.characters()[0]) || ci.atEnd()) {
+              //if (ci.atEnd()) {
+              //  end = ci.range();
+              //  buf.append(chars, 1);
+              //  //buf.append(ci.characters(), 1);
+              //}
               if (!buf.isEmpty()) {
                 RefPtr<Range> wordRange = Range::create(start->startContainer()->document(),
                                                         start->startContainer(), start->startOffset(),
@@ -3677,26 +3680,30 @@ void QWebPage::markWords(int width)
                 buf.clear();
               }
 
-              // skip trailing spaces and advance for the next char
-              const UChar* chars = ci.characters();
-              for (int i = 0, l = ci.length(); i < len; i++) {
-                if (!isSpaceOrNewline(&(chars[i]))) {
-                  ci.advance(i);
+              // skip trailing spaces & newlines and advance for the next char
+              int i = 1; // skip at least current one
+              for (int l = ci.length(); i < l; i++) {
+                if (!isSpaceOrNewline(chars[i])) {
                   break;
                 }
               }
+              ci.advance(i);
+              chars = ci.characters();
               //for (ci.advance(1); isSpaceOrNewline(ci.characters()[0]) && !ci.atEnd(); ci.advance(1)) {}// skip trailing spaces and advance for the next char
               start = ci.range(); // reset start
             }
-            end = ci.range(); // always update end
-            const UChar* chars = ci.characters();
-            for (int i = 0, l = ci.length(); i < len; i++) {
-              if (isSpaceOrNewline(&(chars[i]))) {
-                ci.advance(i);
-                buf.append(chars, i);
+            // even at this point, the head of ci still could be a space or newline
+            int i = 0;
+            for (int l = ci.length(); i < l; i++) {
+              if (isSpaceOrNewline(chars[i])) {
                 break;
               }
             }
+            if (i > 0) { // unless the head of ci is a space or newline
+              ci.advance(i - 1); // advance the length of the word (not necessarily the end of word)
+            }
+            buf.append(chars, i); // copy the word
+            end = ci.range(); // always update end
             // FIXME copying character by character might be inefficient
             //buf.append(ci.characters(), 1);
           }
