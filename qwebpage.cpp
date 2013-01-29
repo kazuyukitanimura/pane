@@ -3670,8 +3670,24 @@ void QWebPage::markWords(int width)
                   const QString text = QString::fromRawData(reinterpret_cast<const QChar*>(buf.data()), buf.size()); // use WebString for cromium build
                   qDebug() << text << ", x: " << r.x() << ", y: " << r.y() << ", width: " << r.width() << ", height: " << r.height();
                   // Compresssion plan
-                  // x: 10bit, y: 15bit, width: 7bit, height: 6bit = 38bit in total
-                  //     1023     32767          127            63
+                  //   size table Vector<uchar>
+                  //   dict table Vector<Vector<uchar>>
+                  //
+                  //   dict info
+                  //     byte desc
+                  //        0 length of UChar
+                  //      1-n UChars
+                  //       +8 location
+                  //      ...
+                  //
+                  //   location info (8 bytes)
+                  //     bit   max desc
+                  //       1     1 one of first locations
+                  //       1     1 one of end locations
+                  //      10  1023 x
+                  //      15 32767 y
+                  //       7   127 width
+                  //       6    63 height
                 }
                 buf.clear();
               }
