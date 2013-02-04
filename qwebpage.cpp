@@ -3630,8 +3630,15 @@ bool QWebPage::findText(const QString &subString, FindFlags options)
     }
 }
 
+#define bitMask(n) ((1 << (n)) -1)
 void QWebPage::markWords(int width)
 {
+    int oneBit = bitMask(1);
+    int sixBits = bitMask(6);
+    int sevenBits = bitMask(7);
+    int tenBits = bitMask(10);
+    int fifteenBits = bitMask(15);
+
     WebCore::Frame* frame = d->page->mainFrame();
     WebCore::FrameView* view = frame->view();
     int height = view->contentsHeight();
@@ -3669,6 +3676,17 @@ void QWebPage::markWords(int width)
                 if (r.width() > 0 && r.height() > 0 && width >= r.maxX() && height >= r.maxY()) {
                   const QString text = QString::fromRawData(reinterpret_cast<const QChar*>(buf.data()), buf.size()); // use WebString for cromium build
                   qDebug() << text << ", x: " << r.x() << ", y: " << r.y() << ", width: " << r.width() << ", height: " << r.height();
+                  int y = r.y()      & fifteenBits;
+                  int h = r.height() & sixBits;
+                  int x = r.x()      & tenBits;
+                  int w = r.width()  & sevenBits;
+                  if ( y == r.y() && h == r.height() && x == r.x() && w == r.width() ) {
+                    unsigned int pos = static_cast<unsigned int>(y);
+                    pos = (pos <<  6) | static_cast<unsigned int>(h);
+                    pos = (pos << 10) | static_cast<unsigned int>(x);
+                    pos = (pos <<  7) | static_cast<unsigned int>(w);
+                    qDebug() << "pos: " << pos;
+                  }
                   // Compresssion plan
                   //   size table Vector<uchar>
                   //   dict table Vector<Vector<uchar>>
@@ -3684,10 +3702,10 @@ void QWebPage::markWords(int width)
                   //     bit   max desc
                   //       1     1 one of first locations
                   //       1     1 one of end locations
-                  //      10  1023 x
                   //      15 32767 y
-                  //       7   127 width
                   //       6    63 height
+                  //      10  1023 x
+                  //       7   127 width
                 }
                 buf.clear();
               }
